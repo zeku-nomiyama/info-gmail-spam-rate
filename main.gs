@@ -66,6 +66,9 @@ function perform() {
       const failedText = `スパム率を取得することが出来ませんでした。\n\`\`\`${errorLog[1]}\`\`\``;
       slackPostService(failedText,infoDate);
   }
+
+  // 次回のトリガーを設定
+  setTrigger();
 }
 
 /**
@@ -235,6 +238,26 @@ function formatJsonData(data) {
   }
  
   return result;
+}
+
+/**
+ * perform関数の実行トリガーを設定する関数
+ */
+function setTrigger() {
+  let triggers = ScriptApp.getProjectTriggers();
+  for(let trigger of triggers){
+    let funcName = trigger.getHandlerFunction();
+    if(funcName == 'perform'){
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  let now = new Date();
+  let y = now.getFullYear();
+  let m = now.getMonth();
+  let d = now.getDate();
+  let date = new Date(y, m, d+1, 10, 00);
+  ScriptApp.newTrigger('perform').timeBased().at(date).create();
 }
 
 // 以下、OAuth2.0の設定に関する関数
