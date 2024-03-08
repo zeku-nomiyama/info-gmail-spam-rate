@@ -19,8 +19,6 @@ function perform() {
       // postMasterToolsからデータ取得
       const apiSettings = setPostmasterToolsAPI();
       const response = UrlFetchApp.fetch(apiSettings.requestUrl, apiSettings.requestOptions);
-      const statusCode = response.getResponseCode();
-      const responseContent = response.getContent();
       
       // 取得データの整形
       const data = JSON.parse(response);
@@ -200,22 +198,15 @@ function formatJsonData(data) {
   }
 
   // 配信エラー率
-  let errors = {};
   let deliveryErrors = object['deliveryErrors'];
-  if(deliveryErrors && deliveryErrors.length > 0){
+  let deliveryErrorRatio = 0;
+  if (deliveryErrors && deliveryErrors.length > 0) {
     for(let i = 0; i < deliveryErrors.length; i++){
-      errors[deliveryErrors[i]['errorClass']] = deliveryErrors[i]['errorRatio'];
+      if(deliveryErrors[i].hasOwnProperty('errorRatio')){
+          deliveryErrorRatio += deliveryErrors[i]['errorRatio'];
+        }
+      deliveryErrorRatio = deliveryErrorRatio;
     }
-  }
-
-  let deliveryPermanentErrorRatio = '';
-  let deliveryTemporaryErrorRatio = '';
-  if(Object.keys(errors).length > 0){ //空オブジェクトかどうか
-    deliveryPermanentErrorRatio = errors['PERMANENT_ERROR'];
-    deliveryTemporaryErrorRatio = errors['TEMPORARY_ERROR'];
-  } else {
-    deliveryPermanentErrorRatio = null;
-    deliveryTemporaryErrorRatio = null;
   }
 
   // 整形したjsonデータをオブジェクトにする
@@ -233,8 +224,7 @@ function formatJsonData(data) {
     'DMARC認証成功率' : object['dmarcSuccessRatio'] * 100,
     '受信でのTLS使用率' : object['inboundEncryptionRatio'] * 100,
     '送信でのTLS使用率' : object['outboundEncryptionRatio'] * 100,
-    '永続的な配信エラー率' : deliveryPermanentErrorRatio * 100,
-    '一時的な配信エラー率' : deliveryTemporaryErrorRatio * 100
+    '配信エラー率' : deliveryErrorRatio * 100
   }
  
   return result;
